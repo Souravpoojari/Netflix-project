@@ -45,6 +45,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Redirect root to login page so / shows UI
+app.get('/', (req, res) => {
+  res.redirect('/login');
+});
+
 // --- JSON API ENDPOINTS (for programmatic access) ---
 
 app.post('/api/register', (req, res) => {
