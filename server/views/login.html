@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - Netflix Clone</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/auth.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <h1 class="brand">NETFLIX</h1>
+      <h2 class="title">Sign In</h2>
+      <form method="POST" action="/auth/login" class="auth-form">
+        <label>
+          <span>Email</span>
+          <input type="email" name="email" required />
+        </label>
+        <label>
+          <span>Password</span>
+          <input type="password" name="password" required />
+        </label>
+        <button type="submit" class="primary-btn">Sign In</button>
+      </form>
+      <p class="switch">
+        New here? <a href="/register">Create an account</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+
