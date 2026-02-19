@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import movieAPI, { getImageUrl } from './api/movieAPI';
+import movieAPI from './api/movieAPI';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import MovieRow from './components/MovieRow';
