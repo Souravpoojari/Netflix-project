@@ -56,32 +56,25 @@ app.post('/api/register', (req, res) => {
 
   const normalizedEmail = String(email).trim().toLowerCase();
 
-  db.get('SELECT id FROM users WHERE email = ?', [normalizedEmail], (err, row) => {
+  db.getUserByEmail(normalizedEmail, (err, existing) => {
     if (err) {
       console.error('Error checking user', err);
       return res.status(500).json({ message: 'Internal server error' });
     }
 
-    if (row) {
+    if (existing) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
     const passwordHash = bcrypt.hashSync(password, 10);
 
-    db.run(
-      'INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)',
-      [name.trim(), normalizedEmail, passwordHash],
-      function (insertErr) {
+    db.createUser(
+      { name: name.trim(), email: normalizedEmail, passwordHash },
+      (insertErr, newUser) => {
         if (insertErr) {
           console.error('Error creating user', insertErr);
           return res.status(500).json({ message: 'Failed to create user' });
         }
-
-        const newUser = {
-          id: this.lastID,
-          name: name.trim(),
-          email: normalizedEmail,
-        };
 
         const token = createToken(newUser);
         return res.status(201).json({
@@ -102,8 +95,7 @@ app.post('/api/login', (req, res) => {
   }
 
   const normalizedEmail = String(email).trim().toLowerCase();
-
-  db.get('SELECT * FROM users WHERE email = ?', [normalizedEmail], (err, user) => {
+  db.getUserByEmail(normalizedEmail, (err, user) => {
     if (err) {
       console.error('Error fetching user', err);
       return res.status(500).json({ message: 'Internal server error' });
@@ -148,22 +140,21 @@ app.post('/auth/register', (req, res) => {
 
   const normalizedEmail = String(email).trim().toLowerCase();
 
-  db.get('SELECT id FROM users WHERE email = ?', [normalizedEmail], (err, row) => {
+  db.getUserByEmail(normalizedEmail, (err, existing) => {
     if (err) {
       console.error('Error checking user', err);
       return res.status(500).send('Internal server error');
     }
 
-    if (row) {
+    if (existing) {
       return res.status(400).send('User already exists with this email. <a href="/login">Login</a>');
     }
 
     const passwordHash = bcrypt.hashSync(password, 10);
 
-    db.run(
-      'INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)',
-      [name.trim(), normalizedEmail, passwordHash],
-      function (insertErr) {
+    db.createUser(
+      { name: name.trim(), email: normalizedEmail, passwordHash },
+      (insertErr) => {
         if (insertErr) {
           console.error('Error creating user', insertErr);
           return res.status(500).send('Failed to create user');
@@ -184,8 +175,7 @@ app.post('/auth/login', (req, res) => {
   }
 
   const normalizedEmail = String(email).trim().toLowerCase();
-
-  db.get('SELECT * FROM users WHERE email = ?', [normalizedEmail], (err, user) => {
+  db.getUserByEmail(normalizedEmail, (err, user) => {
     if (err) {
       console.error('Error fetching user', err);
       return res.status(500).send('Internal server error');

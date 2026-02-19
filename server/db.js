@@ -1,40 +1,70 @@
 const fs = require('fs');
 const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
 
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const dbPath = path.join(dataDir, 'netflix-auth.db');
+const dbPath = path.join(dataDir, 'users.json');
 
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Failed to connect to SQLite database', err);
-  } else {
-    console.log('Connected to SQLite database at', dbPath);
-  }
-});
-
-db.serialize(() => {
-  db.run(
-    `CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`,
-    (err) => {
-      if (err) {
-        console.error('Failed to create users table', err);
-      } else {
-        console.log('Users table ready');
-      }
+function readUsers() {
+  try {
+    if (!fs.existsSync(dbPath)) {
+      return [];
     }
-  );
-});
+    const raw = fs.readFileSync(dbPath, 'utf8');
+    if (!raw.trim()) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to read users.json', e);
+    return [];
+  }
+}
 
-module.exports = db;
+function writeUsers(users) {
+  try {
+    fs.writeFileSync(dbPath, JSON.stringify(users, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Failed to write users.json', e);
+  }
+}
+
+function getUserByEmail(email, cb) {
+  try {
+    const users = readUsers();
+    const user = users.find((u) => u.email === email) || null;
+    cb(null, user);
+  } catch (err) {
+    cb(err);
+  }
+}
+
+function createUser({ name, email, passwordHash }, cb) {
+  try {
+    const users = readUsers();
+    if (users.find((u) => u.email === email)) {
+      return cb(new Error('User already exists'));
+    }
+    const id = users.length ? users[users.length - 1].id + 1 : 1;
+    const user = {
+      id,
+      name,
+      email,
+      password_hash: passwordHash,
+      created_at: new Date().toISOString(),
+    };
+    users.push(user);
+    writeUsers(users);
+    cb(null, user);
+  } catch (err) {
+    cb(err);
+  }
+}
+
+module.exports = {
+  getUserByEmail,
+  createUser,
+};
+
 
